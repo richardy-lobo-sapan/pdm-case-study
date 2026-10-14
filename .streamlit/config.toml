@@ -1,0 +1,5 @@
+[theme]
+primaryColor = "#2a78d6"   # blue accent: red is reserved for "Replace now"
+
+[client]
+toolbarMode = "minimal"    # hides the "Deploy" button

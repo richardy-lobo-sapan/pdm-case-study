@@ -1,0 +1,11 @@
+.venv/
+.env
+__pycache__/
+.pytest_cache/
+.ipynb_checkpoints/
+data/raw/
+data/processed/
+models/
+mlruns/
+mlartifacts/
+mlflow.db

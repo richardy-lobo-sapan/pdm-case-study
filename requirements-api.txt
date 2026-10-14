@@ -1,0 +1,33 @@
+# Docker image (API only): no scikit-learn, Streamlit or MLflow.
+# FULL dependency tree pinned, so every build installs exactly the same packages.
+# Resolved for Linux / Python 3.12 (pip --dry-run --platform manylinux); all versions match requirements.txt's .venv.
+# Direct dependencies: numpy, pandas, scipy, lightgbm, PyYAML, fastapi, pydantic, uvicorn, groq.
+annotated-doc==0.0.5
+annotated-types==0.8.0
+anyio==4.15.1
+certifi==2026.7.22
+click==8.5.0
+distro==1.9.0
+fastapi==0.143.1
+groq==1.7.0
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+idna==3.20
+lightgbm==4.7.0
+narwhals==2.27.1
+numpy==2.5.4
+opentelemetry-api==1.45.1
+pandas==3.0.6
+pydantic==2.14.1
+pydantic_core==2.50.1
+python-dateutil==2.9.0.post0
+PyYAML==6.0.3
+scipy==1.18.1
+six==1.17.0
+sniffio==1.3.1
+starlette==1.8.0
+typing-inspection==0.4.4
+typing_extensions==4.16.0
+tzdata==2026.5
+uvicorn==0.54.0

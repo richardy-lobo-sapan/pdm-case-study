@@ -1,0 +1,24 @@
+# Phase 1 (data + EDA). Later phases append their own pinned packages.
+pandas==3.0.6
+numpy==2.5.4
+matplotlib==3.11.2
+PyYAML==6.0.3
+pytest==9.1.1
+ipykernel==7.4.0
+nbconvert==7.17.2
+# Phase 2 (anomaly detection)
+scikit-learn==1.9.1
+# Phase 3 (remaining life)
+lightgbm==4.7.0
+# Phase 6 (deployment); the Docker image uses the slimmer requirements-api.txt
+fastapi==0.143.1
+pydantic==2.14.1
+uvicorn==0.54.0
+httpx==0.28.1
+streamlit==1.65.0
+mlflow-skinny==3.17.1
+SQLAlchemy==2.1.4
+alembic==1.20.0
+# Phase 7 (field note)
+groq==1.7.0
+python-dotenv==1.2.4

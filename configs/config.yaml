@@ -1,0 +1,88 @@
+seed: 42
+
+paths:
+  raw: data/raw
+  processed: data/processed
+  figures: reports/figures
+  models: models
+
+serving:
+  max_history_rows: 2000          # reject bigger payloads (longest FD001 engine has 362 cycles)
+  api_url: http://127.0.0.1:8000  # dashboard default (not "localhost": Windows tries IPv6 first, +2 s per call); env var API_URL overrides
+
+field_note:
+  # Groq shut down llama-3.1-8b-instant on 2026-08-16 (free/dev tier); this is Groq's recommended replacement.
+  model: openai/gpt-oss-20b
+  reasoning_effort: low       # a short note needs little reasoning; reasoning text is never returned
+  temperature: 0.2            # low = wording stays close between runs
+  max_completion_tokens: 600  # includes the model's hidden reasoning tokens
+  max_words: 80
+  timeout_seconds: 15         # then fall back to the template
+
+tracking:
+  uri: sqlite:///mlflow.db        # MLflow 3 local store: one file, no server (plain-folder store is deprecated)
+  experiment: pdm-fd001
+
+data:
+  subset: FD001
+  # Cap remaining life for training labels: early in life an engine looks healthy
+  # whatever the true RUL, so the model can't tell 300 from 200.
+  rul_cap: 125
+  # A column counts as near-constant if its std over the whole training set is
+  # below this. Chosen after looking at the EDA std table (notebooks/01_eda.ipynb).
+  near_constant_std: 0.01
+
+anomaly:
+  baseline_cycles: 30       # each engine's first N cycles = its own "healthy" reference
+  smooth_window: 10         # trailing mean (past cycles only) before scoring
+  persistence: 3            # alarm only after N consecutive cycles above threshold
+  threshold_quantile: 0.99  # threshold = this quantile of scores on healthy training rows
+  healthy_rul_min: 150      # rows with RUL above this count as "clearly healthy" (EDA: bend starts ~100-150)
+  pca_variance: 0.90        # PCA keeps components explaining this share of healthy variance
+  n_folds: 5                # engine-grouped cross-validation folds
+
+features:
+  window_sizes: [5, 10, 20]   # rolling windows (cycles), used from Phase 3
+
+# Sensor names/units from NASA's C-MAPSS paper (Saxena et al. 2008, Table 2), listed in column order.
+# Assumption: data columns follow Table 2 order. Supported by the data: s1 = 518.67 degR (59 F, sea-level
+# fan inlet temp), s5 = 14.62 psia (sea-level pressure), s8/s18 ~ 2388 rpm (fan speed / demanded fan speed).
+sensor_names:
+  s2: {name: LPC outlet temperature, unit: degR}
+  s3: {name: HPC outlet temperature, unit: degR}
+  s4: {name: LPT outlet temperature, unit: degR}
+  s7: {name: HPC outlet total pressure, unit: psia}
+  s8: {name: fan speed, unit: rpm}
+  s9: {name: core speed, unit: rpm}
+  s11: {name: HPC outlet static pressure, unit: psia}
+  s12: {name: fuel flow to HPC pressure ratio, unit: pps/psi}
+  s13: {name: corrected fan speed, unit: rpm}
+  s14: {name: corrected core speed, unit: rpm}
+  s15: {name: bypass ratio, unit: ""}
+  s17: {name: bleed enthalpy, unit: ""}
+  s20: {name: HPT coolant bleed, unit: lbm/s}
+  s21: {name: LPT coolant bleed, unit: lbm/s}
+  cycle: {name: engine age (cycles run), unit: cycles}
+
+cost_sim:
+  n_folds: 5                  # strategy settings (N, threshold) chosen on other engines, scored on held-out ones
+  bootstrap: 1000             # resamples of engines for the savings uncertainty range
+  # sensitivity: unplanned failure cost / planned replacement cost (downtime costs held fixed)
+  ratio_grid: [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10, 12, 15, 20]
+  lead_grid: [0, 2, 4, 6, 8, 10, 12, 15, 20]   # maintenance lead time sweep (cycles)
+  waste_grid: [25, 50, 75, 100, 150, 200]      # value of a wasted cycle ($); 0 is degenerate per engine (replace at cycle 1 looks free)
+
+rul:
+  n_folds: 5                # engine-grouped cross-validation folds
+  interval_coverage: 0.90     # target share of true RUL inside the confidence range
+  calibration_folds: 5        # cross-conformal: out-of-fold quantile predictions on all training engines set the margin
+  lgbm:                       # fixed, untuned settings (less tuning = less self-deception)
+    n_estimators: 250         # 250 trees @ 0.06 + max_bin 63: ~4x faster than 500 @ 0.03, same RMSE on one fold
+    learning_rate: 0.06
+    max_bin: 63
+    num_leaves: 31
+    min_child_samples: 20
+    subsample: 0.8
+    subsample_freq: 1
+    colsample_bytree: 0.8
+    verbose: -1

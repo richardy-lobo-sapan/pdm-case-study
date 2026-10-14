@@ -1,0 +1,16 @@
+# =====================================================================
+# ALL VALUES BELOW ARE ASSUMPTIONS / PLACEHOLDERS.
+# They are NOT real company or industry figures. They exist only to
+# run the cost simulation (Phase 5), which also varies them in a
+# sensitivity analysis. Label them as assumptions wherever they appear.
+# =====================================================================
+currency: USD
+assumption: true
+
+unplanned_failure_cost: 100000      # ASSUMPTION: repair + collateral damage after breakdown
+planned_replacement_cost: 20000     # ASSUMPTION: parts + labour for a scheduled swap
+downtime_cost_per_cycle: 5000       # ASSUMPTION: lost production per cycle out of service
+unplanned_downtime_cycles: 10       # ASSUMPTION: cycles lost after an unplanned failure
+planned_downtime_cycles: 2          # ASSUMPTION: cycles lost for a planned swap
+wasted_life_cost_per_cycle: 100     # ASSUMPTION: value of each remaining-life cycle thrown away early
+maintenance_lead_cycles: 5          # ASSUMPTION: cycles between a predictive alert and the actual replacement (parts, crew)

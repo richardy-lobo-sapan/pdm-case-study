@@ -1,0 +1,476 @@
+{
+  "meta": {
+    "generated": "2026-10-14",
+    "dataset": "NASA C-MAPSS FD001 (simulation; stand-in for rotating equipment, not real field data)",
+    "costs_are_assumptions": true
+  },
+  "data": {
+    "train_engines": 100,
+    "test_engines": 100,
+    "dropped_columns": [
+      "setting_1",
+      "setting_2",
+      "setting_3",
+      "s1",
+      "s5",
+      "s6",
+      "s10",
+      "s16",
+      "s18",
+      "s19"
+    ],
+    "sensors_used": [
+      "s2",
+      "s3",
+      "s4",
+      "s7",
+      "s8",
+      "s9",
+      "s11",
+      "s12",
+      "s13",
+      "s14",
+      "s15",
+      "s17",
+      "s20",
+      "s21"
+    ],
+    "rul_cap": 125
+  },
+  "early_warning_cv": {
+    "zscore": {
+      "engines": 100.0,
+      "warned": 100.0,
+      "missed": 0.0,
+      "median_lead": 79.5,
+      "p10_lead": 55.0,
+      "engines_with_healthy_period": 70.0,
+      "engine_false_alarm_rate": 0.0428571429,
+      "row_false_alarm_rate": 0.0100978227
+    },
+    "pca": {
+      "engines": 100.0,
+      "warned": 94.0,
+      "missed": 6.0,
+      "median_lead": 69.0,
+      "p10_lead": 16.0,
+      "engines_with_healthy_period": 70.0,
+      "engine_false_alarm_rate": 0.1714285714,
+      "row_false_alarm_rate": 0.0132533922
+    },
+    "iforest": {
+      "engines": 100.0,
+      "warned": 100.0,
+      "missed": 0.0,
+      "median_lead": 80.0,
+      "p10_lead": 59.0,
+      "engines_with_healthy_period": 70.0,
+      "engine_false_alarm_rate": 0.0428571429,
+      "row_false_alarm_rate": 0.0116756074
+    }
+  },
+  "rul": {
+    "cv_rows_rul_le_cap": {
+      "point": {
+        "mean": {
+          "rmse": 43.7587796869,
+          "nasa_mean": 493.0030963106,
+          "nasa_sum": 6211839.013514092,
+          "n": 12600.0
+        },
+        "linear": {
+          "rmse": 21.7856086523,
+          "nasa_mean": 12.2430600143,
+          "nasa_sum": 154262.5561800065,
+          "n": 12600.0
+        },
+        "lgbm": {
+          "rmse": 12.2019204552,
+          "nasa_mean": 2.838048403,
+          "nasa_sum": 35759.4098783769,
+          "n": 12600.0
+        }
+      },
+      "interval": {
+        "quantile_raw": {
+          "coverage": 0.7666666667,
+          "mean_width": 39.3413260719
+        },
+        "conformal": {
+          "coverage": 0.9114285714,
+          "mean_width": 48.7582437273
+        }
+      }
+    },
+    "test_last_cycle": {
+      "point": {
+        "mean": {
+          "rmse": 43.0670355425,
+          "nasa_mean": 336.2923059837,
+          "nasa_sum": 33629.2305983684,
+          "n": 100.0
+        },
+        "linear": {
+          "rmse": 21.9002134069,
+          "nasa_mean": 13.1398663506,
+          "nasa_sum": 1313.9866350554,
+          "n": 100.0
+        },
+        "lgbm": {
+          "rmse": 13.1393143725,
+          "nasa_mean": 2.3626083633,
+          "nasa_sum": 236.2608363336,
+          "n": 100.0
+        }
+      },
+      "interval": {
+        "quantile_raw": {
+          "coverage": 0.75,
+          "mean_width": 43.04408634
+        },
+        "conformal": {
+          "coverage": 0.89,
+          "mean_width": 51.0168986013
+        }
+      },
+      "engines_failing_before_lower_bound": 0,
+      "engines_outside_range": 11
+    }
+  },
+  "explanations": {
+    "share_of_total_push_by_sensor": {
+      "s4": 0.1736,
+      "s11": 0.152,
+      "cycle": 0.1128,
+      "s15": 0.0795,
+      "s12": 0.0777,
+      "s2": 0.0605,
+      "s14": 0.0535,
+      "s9": 0.0534,
+      "s7": 0.0439,
+      "s13": 0.0367,
+      "s17": 0.0357,
+      "s8": 0.0336,
+      "s3": 0.0304,
+      "s20": 0.0299,
+      "s21": 0.0268
+    }
+  },
+  "cost": {
+    "assumed_costs": {
+      "currency": "USD",
+      "assumption": true,
+      "unplanned_failure_cost": 100000,
+      "planned_replacement_cost": 20000,
+      "downtime_cost_per_cycle": 5000,
+      "unplanned_downtime_cycles": 10,
+      "planned_downtime_cycles": 2,
+      "wasted_life_cost_per_cycle": 100,
+      "maintenance_lead_cycles": 5
+    },
+    "event_costs": {
+      "failure": 150000,
+      "planned": 30000
+    },
+    "strategies_held_out": {
+      "Run to failure": {
+        "mean_cost_per_engine": 150000.0,
+        "cost_per_operating_cycle": 727.0612185546,
+        "failures": 100,
+        "planned_replacements": 0,
+        "mean_wasted_cycles_when_planned": 0.0,
+        "setting_range_across_folds": "0-0"
+      },
+      "Fixed schedule": {
+        "mean_cost_per_engine": 38997.0,
+        "cost_per_operating_cycle": 243.1042543245,
+        "failures": 1,
+        "planned_replacements": 99,
+        "mean_wasted_cycles_when_planned": 78.7575757576,
+        "setting_range_across_folds": "127-134"
+      },
+      "Predictive (lower bound)": {
+        "mean_cost_per_engine": 31953.0,
+        "cost_per_operating_cycle": 156.9574403864,
+        "failures": 1,
+        "planned_replacements": 99,
+        "mean_wasted_cycles_when_planned": 7.6060606061,
+        "setting_range_across_folds": "4-5"
+      },
+      "Predictive (point estimate)": {
+        "mean_cost_per_engine": 32143.0,
+        "cost_per_operating_cycle": 158.4721657863,
+        "failures": 1,
+        "planned_replacements": 99,
+        "mean_wasted_cycles_when_planned": 9.5252525253,
+        "setting_range_across_folds": "11-15"
+      }
+    },
+    "chosen_settings_all_engines": {
+      "run_to_failure": 0,
+      "fixed": 127,
+      "predictive_lo": 5,
+      "predictive_point": 15
+    },
+    "savings_lower_bound_policy": {
+      "best_alternative": "fixed",
+      "savings_vs_best_alternative": 0.18062927917532123,
+      "savings_vs_best_alternative_95range": [
+        0.08597027141742096,
+        0.2492932752005382
+      ],
+      "savings_vs_run_to_failure": 0.78698,
+      "savings_per_operating_cycle_vs_best_alternative": 0.3543616057953516,
+      "mean_cost_per_engine": {
+        "run_to_failure": 150000.0,
+        "fixed": 38997.0,
+        "predictive_lo": 31953.0
+      }
+    },
+    "savings_point_policy": {
+      "best_alternative": "fixed",
+      "savings_vs_best_alternative": 0.17575710952124524,
+      "savings_vs_best_alternative_95range": [
+        0.08535771272776257,
+        0.24558134950615848
+      ],
+      "savings_vs_run_to_failure": 0.7857133333333334,
+      "savings_per_operating_cycle_vs_best_alternative": 0.3481308411214953,
+      "mean_cost_per_engine": {
+        "run_to_failure": 150000.0,
+        "fixed": 38997.0,
+        "predictive_point": 32143.0
+      }
+    },
+    "sensitivity_failure_to_planned_ratio": {
+      "1.0": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1873695743,
+        "low95": 0.1465566932,
+        "high95": 0.221167995,
+        "savings_per_operating_cycle": 0.3275308496,
+        "predictive_failures": 1
+      },
+      "1.5": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1818158019,
+        "low95": 0.1344285401,
+        "high95": 0.2170776066,
+        "savings_per_operating_cycle": 0.3351273413,
+        "predictive_failures": 1
+      },
+      "2.0": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1923076923,
+        "low95": 0.1374057128,
+        "high95": 0.2331122902,
+        "savings_per_operating_cycle": 0.3579459704,
+        "predictive_failures": 1
+      },
+      "2.5": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1938848736,
+        "low95": 0.1302312076,
+        "high95": 0.2413981538,
+        "savings_per_operating_cycle": 0.3599506352,
+        "predictive_failures": 1
+      },
+      "3.0": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1825012307,
+        "low95": 0.1184792677,
+        "high95": 0.2287732101,
+        "savings_per_operating_cycle": 0.3543616058,
+        "predictive_failures": 1
+      },
+      "4.0": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1815604299,
+        "low95": 0.1019523434,
+        "high95": 0.2392140489,
+        "savings_per_operating_cycle": 0.3543616058,
+        "predictive_failures": 1
+      },
+      "5.0": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1806292792,
+        "low95": 0.0859702714,
+        "high95": 0.2492932752,
+        "savings_per_operating_cycle": 0.3543616058,
+        "predictive_failures": 1
+      },
+      "6.0": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1797076307,
+        "low95": 0.0699914867,
+        "high95": 0.2577243108,
+        "savings_per_operating_cycle": 0.3543616058,
+        "predictive_failures": 1
+      },
+      "8.0": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1778922646,
+        "low95": 0.0380339173,
+        "high95": 0.27864628,
+        "savings_per_operating_cycle": 0.3543616058,
+        "predictive_failures": 1
+      },
+      "10.0": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1761132085,
+        "low95": 0.0060914919,
+        "high95": 0.2983798623,
+        "savings_per_operating_cycle": 0.3543616058,
+        "predictive_failures": 1
+      },
+      "12.0": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1743693839,
+        "low95": -0.0258146451,
+        "high95": 0.3151440395,
+        "savings_per_operating_cycle": 0.3543616058,
+        "predictive_failures": 1
+      },
+      "15.0": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1718174501,
+        "low95": -0.0714038207,
+        "high95": 0.3415081731,
+        "savings_per_operating_cycle": 0.3543616058,
+        "predictive_failures": 1
+      },
+      "20.0": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1677262662,
+        "low95": -0.1483890446,
+        "high95": 0.3812096399,
+        "savings_per_operating_cycle": 0.3543616058,
+        "predictive_failures": 1
+      }
+    },
+    "sensitivity_lead_time": {
+      "0": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.2145036798,
+        "low95": 0.1770013887,
+        "high95": 0.2600217059,
+        "savings_per_operating_cycle": 0.3829499167,
+        "predictive_failures": 0
+      },
+      "2": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.2133241019,
+        "low95": 0.1756077821,
+        "high95": 0.2591417009,
+        "savings_per_operating_cycle": 0.3815273585,
+        "predictive_failures": 0
+      },
+      "4": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.2144523938,
+        "low95": 0.1771676789,
+        "high95": 0.2600922973,
+        "savings_per_operating_cycle": 0.3828882025,
+        "predictive_failures": 0
+      },
+      "6": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1797830602,
+        "low95": 0.0910884502,
+        "high95": 0.2492597488,
+        "savings_per_operating_cycle": 0.3532879819,
+        "predictive_failures": 1
+      },
+      "8": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.2091186502,
+        "low95": 0.1716488497,
+        "high95": 0.2551992972,
+        "savings_per_operating_cycle": 0.3764018083,
+        "predictive_failures": 0
+      },
+      "10": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1815267841,
+        "low95": 0.0927641519,
+        "high95": 0.2512748693,
+        "savings_per_operating_cycle": 0.3554964094,
+        "predictive_failures": 1
+      },
+      "12": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1784239813,
+        "low95": 0.0822368584,
+        "high95": 0.2434702651,
+        "savings_per_operating_cycle": 0.3515561843,
+        "predictive_failures": 1
+      },
+      "15": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1732697387,
+        "low95": 0.0848329566,
+        "high95": 0.2437289379,
+        "savings_per_operating_cycle": 0.3449032719,
+        "predictive_failures": 1
+      },
+      "20": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1088545273,
+        "low95": -0.0293895303,
+        "high95": 0.2073120531,
+        "savings_per_operating_cycle": 0.2904548093,
+        "predictive_failures": 3
+      }
+    },
+    "sensitivity_wasted_life_value": {
+      "25": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.0531233738,
+        "low95": -0.0583467405,
+        "high95": 0.1473632858,
+        "savings_per_operating_cycle": 0.3543616058,
+        "predictive_failures": 1
+      },
+      "50": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1003461686,
+        "low95": -0.0054872564,
+        "high95": 0.1837078898,
+        "savings_per_operating_cycle": 0.3543616058,
+        "predictive_failures": 1
+      },
+      "75": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.142599753,
+        "low95": 0.0426535532,
+        "high95": 0.2167061887,
+        "savings_per_operating_cycle": 0.3543616058,
+        "predictive_failures": 1
+      },
+      "100": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1806292792,
+        "low95": 0.0859702714,
+        "high95": 0.2492932752,
+        "savings_per_operating_cycle": 0.3543616058,
+        "predictive_failures": 1
+      },
+      "150": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.246319544,
+        "low95": 0.161399264,
+        "high95": 0.3052315004,
+        "savings_per_operating_cycle": 0.3543616058,
+        "predictive_failures": 1
+      },
+      "200": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.313418423,
+        "low95": 0.2261316054,
+        "high95": 0.3720692697,
+        "savings_per_operating_cycle": 0.3696027248,
+        "predictive_failures": 1
+      }
+    }
+  }
+}
