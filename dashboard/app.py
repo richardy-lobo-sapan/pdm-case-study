@@ -3,6 +3,7 @@
 Run the API first (uvicorn api.main:app, or the Docker image), then: streamlit run dashboard/app.py
 Fleet = the 100 NASA C-MAPSS FD001 test engines (simulation data, used as a stand-in for rotating equipment).
 """
+import html
 import os
 import sys
 from pathlib import Path
@@ -128,7 +129,8 @@ with fleet_tab:
         "early-warning alarm on: order parts, inspect", STATUS["plan"]["color"])
     kpi(cols[2], f"{STATUS['monitor']['icon']} Monitor", str(counts.get("monitor", 0)), "no action needed now",
         STATUS["monitor"]["color"])
-    kpi(cols[3], "Fleet median life left", f"{fleet['rul'].median():.0f}", f"cycles · {len(fleet)} engines scored", NEUTRAL)
+    kpi(cols[3], "Median predicted life", f"{fleet['rul'].median():.0f}",
+        f"cycles · {len(fleet)} engines · predictions capped near {CFG['data']['rul_cap']}", NEUTRAL)
 
     st.write("")
     left, right = st.columns([1.05, 1], gap="large")
@@ -179,7 +181,7 @@ with engine_tab:
     r = results[eng]
     s = STATUS[r["action"]["code"]]
     st.markdown(f"<div class='banner' style='--c:{s['color']};--ink:{s['ink']}'><b>{s['icon']} {s['label']}</b>"
-                f" &nbsp;·&nbsp; {r['action']['text'].split(': ', 1)[-1]}</div>", unsafe_allow_html=True)
+                f" &nbsp;·&nbsp; {html.escape(r['action']['text'].split(': ', 1)[-1])}</div>", unsafe_allow_html=True)
     st.write("")
 
     ew = r["early_warning"]
@@ -248,7 +250,7 @@ with engine_tab:
 
     with st.expander("Driver details (plain language)"):
         for d in r["top_drivers"]:
-            st.markdown(f"<div class='driver'>{d['text']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='driver'>{html.escape(d['text'])}</div>", unsafe_allow_html=True)
         st.caption("SHAP pushes, relative to the average engine. They explain the model, not the physics.")
 
     st.markdown("##### Field note")
@@ -257,6 +259,7 @@ with engine_tab:
             resp = client().post("/field-note", json={"engine_id": str(eng), "history": histories[eng]})
             resp.raise_for_status()
             fn = resp.json()["field_note"]
-        st.markdown(f"<div class='note'>{fn['note']}</div>", unsafe_allow_html=True)
+        # escaped: the note may come from an LLM, so never render it as HTML
+        st.markdown(f"<div class='note'>{html.escape(fn['note'])}</div>", unsafe_allow_html=True)
         st.caption(f"Written by {fn['model']} (LLM); every number checked against the prediction."
                    if fn["source"] == "llm" else f"Template note ({fn['fallback_reason']}).")

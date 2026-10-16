@@ -1,6 +1,6 @@
 """Early-warning scores: z-score health index (baseline), PCA reconstruction error, Isolation Forest.
 
-Both score how far an engine has drifted from its own healthy start. An alarm fires when
+All three score how far an engine has drifted from its own healthy start. An alarm fires when
 the score stays above a threshold learned from healthy training data.
 """
 import numpy as np

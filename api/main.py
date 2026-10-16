@@ -9,6 +9,7 @@ import math
 from functools import lru_cache
 
 import lightgbm as lgb
+import numpy as np
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
@@ -41,7 +42,8 @@ def artifacts() -> dict:
 
 
 class PredictRequest(BaseModel):
-    engine_id: str | None = None
+    # Short id only: it is echoed into the field note and the LLM prompt.
+    engine_id: str | None = Field(default=None, max_length=64, pattern=r"^[A-Za-z0-9 ._-]*$")
     history: list[dict[str, float]] = Field(
         min_length=1, max_length=CFG["serving"]["max_history_rows"],
         description="One row per cycle from cycle 1, each with 'cycle' and every model sensor (e.g. 's2').",
@@ -62,13 +64,18 @@ def validate_history(rows: list[dict[str, float]], sensors: list[str]) -> pd.Dat
     return df[["cycle", *sensors]].astype(float).assign(cycle=lambda d: d["cycle"].astype(int), engine=0)
 
 
-def recommend(lower_bound: float, alarm: bool, rules: dict) -> dict:
-    """Action from rules validated earlier: Phase 5 cost-chosen threshold, Phase 2 early-warning alarm."""
+def recommend(lowest_lower_bound: float, alarm: bool, rules: dict) -> dict:
+    """Action from rules validated earlier: Phase 5 cost-chosen threshold, Phase 2 early-warning alarm.
+
+    lowest_lower_bound = lowest lower bound over the engine's history so far: once it reaches the
+    threshold the replace decision sticks, exactly the policy the cost simulation evaluated.
+    """
     t, lead = rules["replace_threshold"], rules["lead_cycles"]
     rule = {"replace_threshold": t, "lead_cycles": lead}
-    if lower_bound <= t:
-        return {"code": "replace", "text": f"Replace now: the lower bound ({lower_bound:.0f} cycles) is at or below "
-                                           f"the {t}-cycle threshold; allow about {lead} cycles to replace.", **rule}
+    if lowest_lower_bound <= t:
+        return {"code": "replace", "text": f"Replace now: the lower bound has reached {lowest_lower_bound:.0f} cycles, "
+                                           f"at or below the {t}-cycle threshold; allow about {lead} cycles to replace.",
+                **rule}
     if alarm:
         return {"code": "plan", "text": "Plan: sensors have drifted from this engine's healthy start; "
                                         "order parts and schedule an inspection.", **rule}
@@ -80,12 +87,13 @@ def predict_engine(history: pd.DataFrame) -> dict:
     art = artifacts()
     m, an = art["meta"], art["meta"]["anomaly"]
     feats, _ = add_rolling_features(history, m["sensors"], m["window_sizes"], m["baseline_cycles"])
-    X = feats.iloc[[-1]][m["features"]]
+    X_all = feats[m["features"]]
 
-    # remaining life + calibrated range (same arithmetic as src.rul.fit_predict)
-    rul = float(art["rul"].predict(X)[0])
-    q_lo, q_hi = sorted([float(art["lo"].predict(X)[0]), float(art["hi"].predict(X)[0])])
-    lo, hi = max(q_lo - m["conformal_margin"], 0.0), q_hi + m["conformal_margin"]
+    # remaining life + calibrated range (same arithmetic as src.rul.fit_predict), range for every cycle
+    rul = float(art["rul"].predict(X_all.iloc[[-1]])[0])
+    q = np.sort(np.column_stack([art["lo"].predict(X_all), art["hi"].predict(X_all)]), axis=1)
+    lo_all = np.clip(q[:, 0] - m["conformal_margin"], 0.0, None)
+    lo, hi = float(lo_all[-1]), float(q[-1, 1] + m["conformal_margin"])
 
     # early warning: z-score health index, alarm after `persistence` cycles above threshold
     health = zscore(prepare(history, m["sensors"], m["baseline_cycles"], an["smooth_window"]), an)
@@ -99,7 +107,7 @@ def predict_engine(history: pd.DataFrame) -> dict:
         "early_warning": {"alarm": alarm, "health_index": round(float(health[-1]), 2), "threshold": round(an["threshold"], 2),
                           "monitoring_started": bool(history["cycle"].iloc[-1] > m["baseline_cycles"])},
         "top_drivers": top_drivers(art["rul"], feats.iloc[[-1]], CFG["sensor_names"]),
-        "action": recommend(lo, alarm, m["action"]),
+        "action": recommend(float(lo_all.min()), alarm, m["action"]),
         "health_index_history": [round(float(v), 3) for v in health],
         "model": {"trained": m["trained"], "dataset": m["dataset"]},
     }
