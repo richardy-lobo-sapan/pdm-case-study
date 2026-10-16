@@ -22,3 +22,5 @@ alembic==1.20.0
 # Phase 7 (field note)
 groq==1.7.0
 python-dotenv==1.2.4
+# Phase 8 (deck built from results.json)
+python-pptx==1.0.2
