@@ -1,10 +1,11 @@
 import numpy as np
 import pandas as pd
 
-from src.cost_sim import engine_costs, evaluate, event_costs, trigger_cycles
+from src.cost_sim import engine_costs, evaluate, event_costs, sensitivity, trigger_cycles
 
 C = {"unplanned_failure_cost": 100_000, "planned_replacement_cost": 20_000, "downtime_cost_per_cycle": 5_000,
-     "unplanned_downtime_cycles": 10, "planned_downtime_cycles": 2, "wasted_life_cost_per_cycle": 100}
+     "unplanned_downtime_cycles": 10, "planned_downtime_cycles": 2, "wasted_life_cost_per_cycle": 100,
+     "maintenance_lead_cycles": 0}
 
 
 def test_event_costs_include_downtime():
@@ -47,3 +48,20 @@ def test_settings_are_chosen_without_the_scored_engine():
     rows = evaluate(lives, tables, c, lead=0, n_folds=5)
     assert rows.loc[1, "fixed_setting"] == 99 and rows.loc[1, "fixed_failed"]
     assert (rows["fixed_setting"] == 9).sum() == 80  # the other folds all saw engine 1
+
+
+def test_ratio_sweep_scales_the_whole_failure_cost_including_downtime():
+    # 20 engines living 81-119 cycles, perfect lower bound. At ratio 1 a breakdown costs exactly a planned swap,
+    # so predicting it can't beat running to failure (replacing early only adds wasted life). At ratio 5 it beats
+    # a fixed schedule, which must replace before the shortest life and so wastes life on the others.
+    lives = pd.Series(np.arange(81, 121, 2), index=pd.RangeIndex(1, 21, name="engine"))
+    preds = pd.concat([pd.DataFrame({"engine": e, "cycle": np.arange(1, L + 1), "lo": L - np.arange(1, L + 1.0)})
+                       for e, L in lives.items()])
+    n = np.arange(1, 121)
+    tables = {"run_to_failure": pd.DataFrame(np.inf, index=lives.index, columns=[0]),
+              "fixed": pd.DataFrame(np.tile(n, (20, 1)).astype(float), index=lives.index, columns=n),
+              "predictive_lo": trigger_cycles(preds, "lo", np.arange(0, 11))}
+    cfg = {"seed": 0, "cost_sim": {"ratio_grid": [1, 5], "n_folds": 4, "bootstrap": 50}}
+    s = sensitivity(lives, tables, C, cfg, "ratio")
+    assert s.loc[1, "best_alternative"] == "run_to_failure" and s.loc[1, "savings_vs_best_alternative"] <= 0
+    assert s.loc[5, "savings_vs_best_alternative"] > 0

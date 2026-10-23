@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated": "2026-10-14",
+    "generated": "2026-10-23",
     "dataset": "NASA C-MAPSS FD001 (simulation; stand-in for rotating equipment, not real field data)",
     "costs_are_assumptions": true
   },
@@ -84,6 +84,12 @@
           "nasa_sum": 154262.5561800065,
           "n": 12600.0
         },
+        "ridge": {
+          "rmse": 18.0321933673,
+          "nasa_mean": 5.9120241675,
+          "nasa_sum": 74491.5045105403,
+          "n": 12600.0
+        },
         "lgbm": {
           "rmse": 12.2019204552,
           "nasa_mean": 2.838048403,
@@ -100,7 +106,63 @@
           "coverage": 0.9114285714,
           "mean_width": 48.7582437273
         }
+      },
+      "interval_by_true_rul": {
+        "(-0.001, 10.0]": {
+          "n": 1100.0,
+          "coverage": 0.9972727273,
+          "below_lower_bound": 0.0027272727,
+          "mean_width": 28.1153321626
+        },
+        "(10.0, 25.0]": {
+          "n": 1500.0,
+          "coverage": 0.9746666667,
+          "below_lower_bound": 0.0173333333,
+          "mean_width": 34.7648909121
+        },
+        "(25.0, 50.0]": {
+          "n": 2500.0,
+          "coverage": 0.8936,
+          "below_lower_bound": 0.0848,
+          "mean_width": 47.9438017734
+        },
+        "(50.0, 75.0]": {
+          "n": 2500.0,
+          "coverage": 0.872,
+          "below_lower_bound": 0.1012,
+          "mean_width": 58.8772427774
+        },
+        "(75.0, 100.0]": {
+          "n": 2500.0,
+          "coverage": 0.8956,
+          "below_lower_bound": 0.0752,
+          "mean_width": 57.0776717783
+        },
+        "(100.0, 125.0]": {
+          "n": 2500.0,
+          "coverage": 0.9088,
+          "below_lower_bound": 0.0476,
+          "mean_width": 48.6131513576
+        }
       }
+    },
+    "test_lgbm_rmse_by_seed": {
+      "seeds": [
+        42,
+        43,
+        44,
+        45,
+        46
+      ],
+      "rmse": [
+        13.139314372541369,
+        12.744524420569096,
+        12.551748414679567,
+        13.354019283798356,
+        13.074319299099523
+      ],
+      "mean": 12.972785158137583,
+      "std": 0.2873170803332779
     },
     "test_last_cycle": {
       "point": {
@@ -114,6 +176,12 @@
           "rmse": 21.9002134069,
           "nasa_mean": 13.1398663506,
           "nasa_sum": 1313.9866350554,
+          "n": 100.0
+        },
+        "ridge": {
+          "rmse": 17.6671083114,
+          "nasa_mean": 4.5761462771,
+          "nasa_sum": 457.6146277115,
           "n": 100.0
         },
         "lgbm": {
@@ -244,22 +312,54 @@
     },
     "sensitivity_failure_to_planned_ratio": {
       "1.0": {
+        "best_alternative": "run_to_failure",
+        "savings_vs_best_alternative": -0.0058,
+        "low95": -0.0071008333,
+        "high95": -0.0044991667,
+        "savings_per_operating_cycle": -0.008505646,
+        "predictive_failures": 44
+      },
+      "1.1": {
+        "best_alternative": "run_to_failure",
+        "savings_vs_best_alternative": 0.072,
+        "low95": 0.0688462121,
+        "high95": 0.0749401515,
+        "savings_per_operating_cycle": 0.0639537787,
+        "predictive_failures": 3
+      },
+      "1.25": {
         "best_alternative": "fixed",
-        "savings_vs_best_alternative": 0.1873695743,
-        "low95": 0.1465566932,
-        "high95": 0.221167995,
-        "savings_per_operating_cycle": 0.3275308496,
-        "predictive_failures": 1
+        "savings_vs_best_alternative": 0.1295140752,
+        "low95": 0.1084601032,
+        "high95": 0.1468775411,
+        "savings_per_operating_cycle": 0.1747375538,
+        "predictive_failures": 3
       },
       "1.5": {
         "best_alternative": "fixed",
-        "savings_vs_best_alternative": 0.1818158019,
-        "low95": 0.1344285401,
-        "high95": 0.2170776066,
-        "savings_per_operating_cycle": 0.3351273413,
+        "savings_vs_best_alternative": 0.1630420063,
+        "low95": 0.1391394734,
+        "high95": 0.1838501564,
+        "savings_per_operating_cycle": 0.2752646915,
         "predictive_failures": 1
       },
       "2.0": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.177730703,
+        "low95": 0.1407745984,
+        "high95": 0.2078204835,
+        "savings_per_operating_cycle": 0.2970013308,
+        "predictive_failures": 1
+      },
+      "2.5": {
+        "best_alternative": "fixed",
+        "savings_vs_best_alternative": 0.1902895993,
+        "low95": 0.1449261373,
+        "high95": 0.2273160162,
+        "savings_per_operating_cycle": 0.3306611367,
+        "predictive_failures": 1
+      },
+      "3.0": {
         "best_alternative": "fixed",
         "savings_vs_best_alternative": 0.1923076923,
         "low95": 0.1374057128,
@@ -267,27 +367,11 @@
         "savings_per_operating_cycle": 0.3579459704,
         "predictive_failures": 1
       },
-      "2.5": {
-        "best_alternative": "fixed",
-        "savings_vs_best_alternative": 0.1938848736,
-        "low95": 0.1302312076,
-        "high95": 0.2413981538,
-        "savings_per_operating_cycle": 0.3599506352,
-        "predictive_failures": 1
-      },
-      "3.0": {
-        "best_alternative": "fixed",
-        "savings_vs_best_alternative": 0.1825012307,
-        "low95": 0.1184792677,
-        "high95": 0.2287732101,
-        "savings_per_operating_cycle": 0.3543616058,
-        "predictive_failures": 1
-      },
       "4.0": {
         "best_alternative": "fixed",
-        "savings_vs_best_alternative": 0.1815604299,
-        "low95": 0.1019523434,
-        "high95": 0.2392140489,
+        "savings_vs_best_alternative": 0.1820296147,
+        "low95": 0.1100003218,
+        "high95": 0.2342911343,
         "savings_per_operating_cycle": 0.3543616058,
         "predictive_failures": 1
       },
@@ -301,49 +385,49 @@
       },
       "6.0": {
         "best_alternative": "fixed",
-        "savings_vs_best_alternative": 0.1797076307,
-        "low95": 0.0699914867,
-        "high95": 0.2577243108,
+        "savings_vs_best_alternative": 0.1792503245,
+        "low95": 0.0620020943,
+        "high95": 0.2630677621,
         "savings_per_operating_cycle": 0.3543616058,
         "predictive_failures": 1
       },
       "8.0": {
         "best_alternative": "fixed",
-        "savings_vs_best_alternative": 0.1778922646,
-        "low95": 0.0380339173,
-        "high95": 0.27864628,
+        "savings_vs_best_alternative": 0.1765546282,
+        "low95": 0.0140703976,
+        "high95": 0.2935616446,
         "savings_per_operating_cycle": 0.3543616058,
         "predictive_failures": 1
       },
       "10.0": {
         "best_alternative": "fixed",
-        "savings_vs_best_alternative": 0.1761132085,
-        "low95": 0.0060914919,
-        "high95": 0.2983798623,
+        "savings_vs_best_alternative": 0.1739388103,
+        "low95": -0.0336597583,
+        "high95": 0.3196836934,
         "savings_per_operating_cycle": 0.3543616058,
         "predictive_failures": 1
       },
       "12.0": {
         "best_alternative": "fixed",
-        "savings_vs_best_alternative": 0.1743693839,
-        "low95": -0.0258146451,
-        "high95": 0.3151440395,
+        "savings_vs_best_alternative": 0.1713993722,
+        "low95": -0.0789396772,
+        "high95": 0.3457061097,
         "savings_per_operating_cycle": 0.3543616058,
         "predictive_failures": 1
       },
       "15.0": {
         "best_alternative": "fixed",
-        "savings_vs_best_alternative": 0.1718174501,
-        "low95": -0.0714038207,
-        "high95": 0.3415081731,
+        "savings_vs_best_alternative": 0.1677262662,
+        "low95": -0.1483890446,
+        "high95": 0.3812096399,
         "savings_per_operating_cycle": 0.3543616058,
         "predictive_failures": 1
       },
       "20.0": {
         "best_alternative": "fixed",
-        "savings_vs_best_alternative": 0.1677262662,
-        "low95": -0.1483890446,
-        "high95": 0.3812096399,
+        "savings_vs_best_alternative": 0.1619422029,
+        "low95": -0.2672521535,
+        "high95": 0.4325300687,
         "savings_per_operating_cycle": 0.3543616058,
         "predictive_failures": 1
       }

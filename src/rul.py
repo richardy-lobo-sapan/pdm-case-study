@@ -1,12 +1,16 @@
-"""Remaining-life models (mean, linear, LightGBM), conformal confidence ranges, and metrics."""
+"""Remaining-life models (mean, linear, ridge, LightGBM), conformal confidence ranges, and metrics."""
 import numpy as np
 import pandas as pd
 from lightgbm import LGBMRegressor
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, RidgeCV
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
 from src.data import engine_folds
 
-POINT_MODELS = ["mean", "linear", "lgbm"]
+# linear = current sensor readings only; ridge = linear model on the SAME rolling features as LightGBM,
+# so the gap ridge -> lgbm is what the tree model adds, not what the features add.
+POINT_MODELS = ["mean", "linear", "ridge", "lgbm"]
 
 
 # ---------- metrics ----------
@@ -27,6 +31,18 @@ def nasa_score(y: np.ndarray, p: np.ndarray) -> np.ndarray:
 def coverage(y: np.ndarray, lo: np.ndarray, hi: np.ndarray) -> float:
     y = np.asarray(y)
     return float(np.mean((y >= lo) & (y <= hi)))
+
+
+def coverage_by_band(preds: pd.DataFrame, edges: list[int], y_col: str = "rul") -> pd.DataFrame:
+    """Conformal coverage per true-RUL band. The overall 90% is an average; what matters for the
+    replace decision is how often the truth falls BELOW the lower bound close to failure."""
+    band = pd.cut(preds[y_col], edges, include_lowest=True)
+    out = preds.groupby(band, observed=True).apply(lambda g: pd.Series({
+        "n": len(g), "coverage": coverage(g[y_col], g["lo"], g["hi"]),
+        "below_lower_bound": float((g[y_col] < g["lo"]).mean()), "mean_width": float((g["hi"] - g["lo"]).mean()),
+    }))
+    out.index = out.index.astype(str)
+    return out
 
 
 # ---------- conformal ----------
@@ -83,12 +99,15 @@ def fit_range(fit_df: pd.DataFrame, features: list[str], cfg: dict) -> tuple[tup
 def fit_predict(fit_df: pd.DataFrame, pred_df: pd.DataFrame, features: list[str], sensors: list[str], cfg: dict) -> pd.DataFrame:
     """Fit all models on fit_df, predict pred_df.
 
-    Returns columns: mean, linear, lgbm, lo_raw, hi_raw, lo, hi (range: see fit_range).
+    Returns columns: mean, linear, ridge, lgbm, lo_raw, hi_raw, lo, hi (range: see fit_range).
     """
     y = fit_df["rul_capped"]
     out = pd.DataFrame(index=pred_df.index)
     out["mean"] = y.mean()
     out["linear"] = LinearRegression().fit(fit_df[sensors], y).predict(pred_df[sensors])
+    # slope/std are undefined on an engine's first row; 0 = "no trend yet" (LightGBM handles NaN itself)
+    ridge = make_pipeline(StandardScaler(), RidgeCV(alphas=np.logspace(-2, 3, 12)))
+    out["ridge"] = ridge.fit(fit_df[features].fillna(0), y).predict(pred_df[features].fillna(0))
     out["lgbm"] = fit_lgbm(fit_df, features, cfg).predict(pred_df[features])
 
     models, margin = fit_range(fit_df, features, cfg)

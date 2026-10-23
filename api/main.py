@@ -82,6 +82,14 @@ def recommend(lowest_lower_bound: float, alarm: bool, rules: dict) -> dict:
     return {"code": "monitor", "text": "Monitor: no action needed now.", **rule}
 
 
+def input_check(history: pd.DataFrame, ranges: dict, recent: int) -> dict:
+    """Sensors whose last `recent` readings leave the training range: the model never saw such values, so
+    its answer is a guess (stuck or drifting sensor, or a machine unlike the training fleet). Check before acting."""
+    window = history.tail(recent)
+    out = [s for s, (lo, hi) in ranges.items() if ((window[s] < lo) | (window[s] > hi)).any()]
+    return {"out_of_training_range": out, "checked_last_cycles": len(window), "ok": not out}
+
+
 def predict_engine(history: pd.DataFrame) -> dict:
     """Run every model on one validated engine history; answer for its latest cycle."""
     art = artifacts()
@@ -108,6 +116,7 @@ def predict_engine(history: pd.DataFrame) -> dict:
                           "monitoring_started": bool(history["cycle"].iloc[-1] > m["baseline_cycles"])},
         "top_drivers": top_drivers(art["rul"], feats.iloc[[-1]], CFG["sensor_names"]),
         "action": recommend(float(lo_all.min()), alarm, m["action"]),
+        "input_check": input_check(history, m["sensor_ranges"], max(m["window_sizes"])),
         "health_index_history": [round(float(v), 3) for v in health],
         "model": {"trained": m["trained"], "dataset": m["dataset"]},
     }

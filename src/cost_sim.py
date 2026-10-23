@@ -161,16 +161,21 @@ def savings(rows: pd.DataFrame, c: dict, n_boot: int, seed: int, predictive: str
 def sensitivity(lives: pd.Series, tables: dict, c: dict, cfg: dict, param: str) -> pd.DataFrame:
     """Re-choose settings and recompute savings while varying one assumption.
 
-    param = "ratio": unplanned failure cost / planned replacement cost (downtime fixed).
+    param = "ratio": total failure cost / total planned cost, downtime included (event_costs). Repair and
+                     downtime of a failure scale together, so ratio 1 really means "a breakdown costs no more
+                     than a planned swap" — the point where predicting failures stops paying.
     param = "lead":  maintenance lead time in cycles.
     param = "waste": value of one wasted remaining-life cycle.
     """
     sc = cfg["cost_sim"]
+    failure, planned = event_costs(c)
+    downtime_share = c["downtime_cost_per_cycle"] * c["unplanned_downtime_cycles"] / failure
     rows = []
     for v in sc[f"{param}_grid"]:
         cc, lead = dict(c), c["maintenance_lead_cycles"]
         if param == "ratio":
-            cc["unplanned_failure_cost"] = v * c["planned_replacement_cost"]
+            cc["unplanned_failure_cost"] = v * planned * (1 - downtime_share)
+            cc["unplanned_downtime_cycles"] = v * planned * downtime_share / c["downtime_cost_per_cycle"]
         elif param == "waste":
             cc["wasted_life_cost_per_cycle"] = v
         else:

@@ -47,6 +47,8 @@ def log_mlflow(cfg: dict, costs: dict, results: dict, files: list[Path]) -> None
             "cv_rmse": r["cv_rows_rul_le_cap"]["point"]["lgbm"]["rmse"],
             "cv_coverage": r["cv_rows_rul_le_cap"]["interval"]["conformal"]["coverage"],
             "test_rmse": r["test_last_cycle"]["point"]["lgbm"]["rmse"],
+            "test_rmse_ridge": r["test_last_cycle"]["point"]["ridge"]["rmse"],
+            "test_rmse_seed_std": r["test_lgbm_rmse_by_seed"]["std"],
             "test_nasa_sum": r["test_last_cycle"]["point"]["lgbm"]["nasa_sum"],
             "test_coverage": r["test_last_cycle"]["interval"]["conformal"]["coverage"],
             "warning_median_lead": results["early_warning_cv"]["zscore"]["median_lead"],
@@ -81,9 +83,13 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
     oof.to_csv(out_dir / "rul_oof.csv", index=False)
     cv_point, cv_interval = rul.summarize(oof[oof["rul"] <= cap])
+    cv_bands = rul.coverage_by_band(oof[oof["rul"] <= cap], cfg["rul"]["coverage_bands"])
     last = test.groupby("engine").tail(1)
     test_pred = pd.concat([last[["engine", "rul"]], rul.fit_predict(train, last, features, sensors, cfg)], axis=1)
     test_point, test_interval = rul.summarize(test_pred)
+    # same data, other seeds: how much of the test RMSE is luck of the draw (bagging/column sampling)
+    seed_rmse = [rul.rmse(last["rul"], rul.fit_lgbm(train, features, {**cfg, "seed": cfg["seed"] + i}).predict(last[features]))
+                 for i in range(cfg["rul"]["seed_runs"])]
     log("remaining life done")
 
     model = rul.fit_lgbm(train, features, cfg)
@@ -109,7 +115,10 @@ def main() -> None:
                  "dropped_columns": dropped, "sensors_used": sensors, "rul_cap": cap},
         "early_warning_cv": _records(anomaly_summary),
         "rul": {
-            "cv_rows_rul_le_cap": {"point": _records(cv_point), "interval": _records(cv_interval)},
+            "cv_rows_rul_le_cap": {"point": _records(cv_point), "interval": _records(cv_interval),
+                                   "interval_by_true_rul": _records(cv_bands)},
+            "test_lgbm_rmse_by_seed": {"seeds": [cfg["seed"] + i for i in range(len(seed_rmse))], "rmse": seed_rmse,
+                                       "mean": float(np.mean(seed_rmse)), "std": float(np.std(seed_rmse))},
             "test_last_cycle": {"point": _records(test_point), "interval": _records(test_interval),
                                 "engines_failing_before_lower_bound": int((test_pred.rul < test_pred.lo).sum()),
                                 "engines_outside_range": int(((test_pred.rul < test_pred.lo) | (test_pred.rul > test_pred.hi)).sum())},
@@ -145,6 +154,8 @@ def main() -> None:
     meta = {
         "trained": date.today().isoformat(), "dataset": results["meta"]["dataset"],
         "features": features, "sensors": sensors, "window_sizes": cfg["features"]["window_sizes"],
+        # readings outside what the model was trained on get flagged by the API (sensor fault or a different machine)
+        "sensor_ranges": {s: [float(train[s].min()), float(train[s].max())] for s in sensors},
         "baseline_cycles": a["baseline_cycles"], "rul_cap": cap,
         "interval_coverage": cfg["rul"]["interval_coverage"], "conformal_margin": margin,
         "anomaly": {"smooth_window": a["smooth_window"], "persistence": a["persistence"],

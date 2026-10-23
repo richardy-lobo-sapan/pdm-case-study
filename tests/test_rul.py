@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from src.features import add_rolling_features
-from src.rul import conformal_margin, coverage, nasa_score
+from src.rul import conformal_margin, coverage, coverage_by_band, nasa_score
 
 
 def test_nasa_score_penalizes_late_more_than_early():
@@ -18,6 +18,14 @@ def test_conformal_margin_fixes_too_narrow_ranges():
     lo, hi = np.full(5000, -0.5), np.full(5000, 0.5)  # covers only ~38%
     m = conformal_margin(y_cal, lo, hi, target=0.9)
     assert 0.88 <= coverage(y_new, lo - m, hi + m) <= 0.92
+
+
+def test_coverage_by_band_splits_misses_by_distance_to_failure():
+    preds = pd.DataFrame({"rul": [5, 8, 30, 40], "lo": [0, 9, 20, 20], "hi": [20, 20, 35, 35]})
+    b = coverage_by_band(preds, [0, 10, 50])
+    assert b.index.tolist() == ["(-0.001, 10.0]", "(10.0, 50.0]"]
+    assert b["coverage"].tolist() == [0.5, 0.5]
+    assert b["below_lower_bound"].tolist() == [0.5, 0.0]  # rul 8 < lo 9 near failure; rul 40 > hi far from it
 
 
 def test_features_never_look_ahead():

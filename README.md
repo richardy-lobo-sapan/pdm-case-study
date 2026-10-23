@@ -17,9 +17,11 @@ served by an API, a dashboard and a short note for field engineers.
   early cycles warned all 100 engines before failure, 90% of them at least 55 cycles ahead, with 4% false
   alarms. Fancier anomaly models did not beat it.
 - **Remaining life comes with an honest range.** The model is off by about 13 cycles on unseen engines
-  (RMSE 13.1), its calibrated 90% ranges held 89% of outcomes, and no test engine failed before its lower bound.
-- **Where it stops paying:** if wasted life is worth under $50 per cycle, or if replacing a part takes
-  20 or more cycles after an alert, the saving can no longer be told apart from zero.
+  (RMSE 13.1, against 17.7 for a linear model given the same features), its calibrated 90% ranges held 89% of
+  outcomes, and no test engine failed before its lower bound.
+- **Where it stops paying:** if a breakdown costs less than 1.1× a planned job (downtime included), if wasted
+  life is worth under $50 per cycle, or if replacing a part takes 20 or more cycles after an alert, the saving
+  can no longer be told apart from zero.
 
 The deck that tells the full story is built locally with `python deck/build_deck.py` (not committed).
 

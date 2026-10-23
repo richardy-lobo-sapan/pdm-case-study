@@ -39,6 +39,14 @@ def test_predict_matches_offline_evaluation():
     assert len(body["top_drivers"]) == 3 and all(d["text"] for d in body["top_drivers"])
     assert body["action"]["code"] in {"replace", "plan", "monitor"}
     assert len(body["health_index_history"]) == len(hist)
+    assert body["input_check"]["ok"]
+
+
+def test_predict_flags_readings_outside_training_range():
+    hist = _history(1)
+    hist[-1] = dict(hist[-1], s4=hist[-1]["s4"] * 1.05)  # latest LPT temperature 5% high: stuck or drifting sensor
+    body = client.post("/predict", json={"history": hist}).json()
+    assert body["input_check"] == {"out_of_training_range": ["s4"], "checked_last_cycles": 20, "ok": False}
 
 
 @pytest.mark.parametrize("mutate, message", [

@@ -182,6 +182,9 @@ with engine_tab:
     s = STATUS[r["action"]["code"]]
     st.markdown(f"<div class='banner' style='--c:{s['color']};--ink:{s['ink']}'><b>{s['icon']} {s['label']}</b>"
                 f" &nbsp;·&nbsp; {html.escape(r['action']['text'].split(': ', 1)[-1])}</div>", unsafe_allow_html=True)
+    if not r["input_check"]["ok"]:
+        st.warning(f"Check the sensors before acting: {', '.join(r['input_check']['out_of_training_range'])} read outside "
+                   "the range the model was trained on, so this estimate is unreliable.")
     st.write("")
 
     ew = r["early_warning"]
