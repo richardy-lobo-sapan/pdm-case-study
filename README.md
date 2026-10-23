@@ -69,10 +69,11 @@ scored by a model that saw it.
 - **The saving survives a stricter uncertainty check:** re-choosing the threshold inside every bootstrap
   resample gives a 95% range of 7–28%.
 
-**Every number in the deck comes from code.** `deck/build_deck.py` registers each number with its source
-in `deck/facts.json`, and `tests/test_deck.py` fails if the deck, the LinkedIn post or this README shows
-any other number. (The check compares values, not meanings: it stops typed-in numbers, not a real number
-reused in the wrong sentence.)
+**Every number in the deck comes from code.** The deck is generated from `reports/results.json` by a local
+build script that registers each number with its source, and `tests/test_deck.py` fails if the deck or this
+README shows any other number. (The build script and its facts file are kept out of the repo, so the test
+skips here. It compares values, not meanings: it stops typed-in numbers, not a real number reused in the
+wrong sentence.)
 
 ## Run it
 
@@ -97,7 +98,6 @@ python -m src.train --subset FD004   # robustness check on harder data (reports/
 pytest -q                            # tests (also run on every push by GitHub Actions)
 uvicorn api.main:app                 # API on http://127.0.0.1:8000
 streamlit run dashboard/app.py       # dashboard (needs the API running)
-python deck/build_deck.py            # rebuild the deck and LinkedIn post from the results
 docker build -t pdm-case .
 docker run --env-file .env -p 8000:8000 pdm-case
 ```
@@ -116,5 +116,5 @@ Notebooks in `notebooks/` use a kernel named `pdm-venv`; register it with
 | `notebooks/` | Exploration and write-up for each step, with conclusions and limits |
 | `configs/` | Settings (`config.yaml`) and assumed costs (`costs.yaml`) |
 | `reports/` | Figures, `results.json` (single source of truth for every reported number) and `results_FD004.json` |
-| `deck/` | The deck (`pdm_case_study.pptx`), the technical review (`technical_review.pdf`) and `build_deck.py`, which builds the deck from the results |
+| `deck/` | The deck (`pdm_case_study.pptx`) and the technical review (`technical_review.pdf`) |
 | `tests/` | Labels, engine-grouped splits, no look-ahead, cost math, API, field-note and deck number checks |
