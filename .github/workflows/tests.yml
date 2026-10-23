@@ -1,0 +1,19 @@
+# Runs the test suite on every push and pull request.
+# The NASA data and trained models are not in the repo, so tests that need them (API parity, deck numbers)
+# skip themselves here; everything else (labels, engine-grouped splits, no look-ahead, cost math,
+# conformal ranges, field-note number check) runs on synthetic data.
+name: tests
+
+on: [push, pull_request]
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: pytest -q

@@ -21,10 +21,13 @@ field_note:
 
 tracking:
   uri: sqlite:///mlflow.db        # MLflow 3 local store: one file, no server (plain-folder store is deprecated)
-  experiment: pdm-fd001
+  experiment_prefix: pdm          # one experiment per subset: pdm-fd001, pdm-fd004
 
 data:
-  subset: FD001
+  subset: FD001                   # deployed subset (API, deck, notebooks); others run with `python -m src.train --subset FD004`
+  # Operating conditions per subset (NASA C-MAPSS readme). FD004's 3 settings form 6 tight clusters (checked:
+  # within-cluster setting std <= 0.003); sensors are normalized within each one (src.data.normalize_by_regime).
+  regimes: {FD001: 1, FD004: 6}
   # Cap remaining life for training labels: early in life an engine looks healthy
   # whatever the true RUL, so the model can't tell 300 from 200.
   rul_cap: 125

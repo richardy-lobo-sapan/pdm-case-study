@@ -9,6 +9,9 @@ models/
 mlruns/
 mlartifacts/
 mlflow.db
-# deck outputs: built locally by deck/build_deck.py, not committed
+# deck/: only the build script and the final deliverables (deck + review report) are committed;
+# generator files (facts.json, LinkedIn post, demo script) stay local
 deck/*
 !deck/build_deck.py
+!deck/pdm_case_study.pptx
+!deck/technical_review.pdf

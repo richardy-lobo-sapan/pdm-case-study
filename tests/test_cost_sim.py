@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from src.cost_sim import engine_costs, evaluate, event_costs, sensitivity, trigger_cycles
+from src.cost_sim import engine_costs, evaluate, event_costs, nested_savings_range, sensitivity, trigger_cycles
 
 C = {"unplanned_failure_cost": 100_000, "planned_replacement_cost": 20_000, "downtime_cost_per_cycle": 5_000,
      "unplanned_downtime_cycles": 10, "planned_downtime_cycles": 2, "wasted_life_cost_per_cycle": 100,
@@ -48,6 +48,20 @@ def test_settings_are_chosen_without_the_scored_engine():
     rows = evaluate(lives, tables, c, lead=0, n_folds=5)
     assert rows.loc[1, "fixed_setting"] == 99 and rows.loc[1, "fixed_failed"]
     assert (rows["fixed_setting"] == 9).sum() == 80  # the other folds all saw engine 1
+
+
+def test_nested_range_collapses_when_every_engine_is_the_same():
+    # identical engines: any resample picks the same settings and costs, so the range is one point,
+    # equal to the plain (non-bootstrap) savings
+    lives = pd.Series(100, index=pd.RangeIndex(1, 21, name="engine"))
+    cycles = np.arange(1, 101)
+    preds = pd.DataFrame({"engine": np.repeat(lives.index, 100), "cycle": np.tile(cycles, 20), "lo": np.tile(100.0 - cycles, 20)})
+    tables = {"fixed": pd.DataFrame(np.tile(np.arange(1, 121), (20, 1)).astype(float), index=lives.index, columns=np.arange(1, 121)),
+              "predictive_lo": trigger_cycles(preds, "lo", np.arange(0, 11))}
+    rows = evaluate(lives, tables, C, lead=0, n_folds=4)
+    point = 1 - rows["predictive_lo_cost"].mean() / rows["fixed_cost"].mean()
+    lo, hi = nested_savings_range(lives, tables, C, lead=0, n_folds=4, n_boot=20, seed=0, alternative="fixed")
+    assert np.isclose(lo, point) and np.isclose(hi, point)
 
 
 def test_ratio_sweep_scales_the_whole_failure_cost_including_downtime():

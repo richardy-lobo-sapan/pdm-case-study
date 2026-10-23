@@ -2,6 +2,7 @@
   "meta": {
     "generated": "2026-10-23",
     "dataset": "NASA C-MAPSS FD001 (simulation; stand-in for rotating equipment, not real field data)",
+    "operating_regimes": 1,
     "costs_are_assumptions": true
   },
   "data": {
@@ -164,6 +165,29 @@
       "mean": 12.972785158137583,
       "std": 0.2873170803332779
     },
+    "ablation_without_engine_age": {
+      "cv_rmse": 14.275616756080773,
+      "test_rmse": 14.797973130204616
+    },
+    "test_split_by_cap": {
+      "all_rows_rul_le_cap": {
+        "rows": 5144,
+        "rmse": 13.457988890907824,
+        "coverage": 0.9199066874027994
+      },
+      "last_cycle_rul_le_cap": {
+        "engines": 89,
+        "rmse": 11.936618027233997,
+        "coverage": 0.9662921348314607,
+        "failing_before_lower_bound": 0
+      },
+      "last_cycle_rul_gt_cap": {
+        "engines": 11,
+        "rmse": 20.4120832629005,
+        "coverage": 0.2727272727272727,
+        "failing_before_lower_bound": 0
+      }
+    },
     "test_last_cycle": {
       "point": {
         "mean": {
@@ -293,7 +317,11 @@
         "run_to_failure": 150000.0,
         "fixed": 38997.0,
         "predictive_lo": 31953.0
-      }
+      },
+      "savings_vs_best_alternative_95range_nested": [
+        0.0737320147506373,
+        0.27500289354689206
+      ]
     },
     "savings_point_policy": {
       "best_alternative": "fixed",

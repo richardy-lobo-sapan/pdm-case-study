@@ -158,6 +158,32 @@ def savings(rows: pd.DataFrame, c: dict, n_boot: int, seed: int, predictive: str
     }
 
 
+def nested_savings_range(lives: pd.Series, tables: dict, c: dict, lead: int, n_folds: int, n_boot: int, seed: int,
+                         alternative: str, predictive: str = "predictive_lo") -> list[float]:
+    """95% range of savings with the WHOLE procedure redone on each bootstrap resample of engines:
+    the settings (N, T) are re-chosen on other engines inside every resample.
+
+    savings() resamples engines with their costs fixed, so it ignores that a different set of engines
+    would have led to a different N or T. This range includes that, so it is the more honest one.
+    """
+    from sklearn.model_selection import GroupKFold
+
+    life = lives.to_numpy()[:, None]
+    costs = {s: engine_costs(_replace_at(s, tables[s], lead).to_numpy(), life, c) for s in (alternative, predictive)}
+    rng = np.random.default_rng(seed)
+    boot = []
+    for _ in range(n_boot):
+        idx = rng.integers(0, len(lives), size=len(lives))  # copies of one engine stay in one fold (group = engine)
+        mean = {}
+        for s, cost in costs.items():
+            cb, chosen = cost[idx], np.empty(len(idx))
+            for fit, val in GroupKFold(n_splits=n_folds).split(cb, groups=idx):
+                chosen[val] = cb[val, cb[fit].mean(axis=0).argmin()]
+            mean[s] = chosen.mean()
+        boot.append(1 - mean[predictive] / mean[alternative])
+    return [float(np.quantile(boot, 0.025)), float(np.quantile(boot, 0.975))]
+
+
 def sensitivity(lives: pd.Series, tables: dict, c: dict, cfg: dict, param: str) -> pd.DataFrame:
     """Re-choose settings and recompute savings while varying one assumption.
 

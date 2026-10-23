@@ -129,6 +129,16 @@ def cross_validate(train: pd.DataFrame, features: list[str], sensors: list[str],
     return pd.concat([train[["engine", "cycle", "rul", "rul_capped"]], preds], axis=1)
 
 
+def cv_point_rmse(train: pd.DataFrame, features: list[str], cfg: dict) -> float:
+    """Engine-grouped CV RMSE of the LightGBM point model alone, on rows with true RUL <= cap
+    (same rows and folds as cross_validate). Cheap enough for ablations."""
+    oof = np.empty(len(train))
+    for fit_idx, val_idx in engine_folds(train, cfg["rul"]["n_folds"]):
+        oof[val_idx] = fit_lgbm(train.iloc[fit_idx], features, cfg).predict(train.iloc[val_idx][features])
+    near = (train["rul"] <= cfg["data"]["rul_cap"]).to_numpy()
+    return rmse(train["rul"].to_numpy()[near], oof[near])
+
+
 def summarize(preds: pd.DataFrame, y_col: str = "rul") -> tuple[pd.DataFrame, pd.DataFrame]:
     """(point-model table, interval table) against true RUL in `y_col`."""
     y = preds[y_col].to_numpy()

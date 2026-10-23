@@ -58,6 +58,30 @@ def add_test_rul(test: pd.DataFrame, true_rul: pd.Series, cap: int) -> pd.DataFr
     return out.assign(rul_capped=out["rul"].clip(upper=cap))
 
 
+def normalize_by_regime(train: pd.DataFrame, test: pd.DataFrame, n_regimes: int, seed: int) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Express every sensor as distance from its operating-regime mean, in that regime's noise units.
+
+    In multi-condition subsets (FD002/FD004) the operating settings, not wear, cause most sensor
+    variation: the same healthy engine reads very differently at altitude than at sea level.
+    Regimes = k-means clusters of the 3 settings, fitted on train; means/stds from train only.
+    A sensor constant within a regime becomes 0 there. n_regimes=1 leaves the data untouched.
+    """
+    if n_regimes == 1:
+        return train, test
+    from sklearn.cluster import KMeans  # imported here so the API image needs no scikit-learn
+
+    km = KMeans(n_clusters=n_regimes, n_init=10, random_state=seed).fit(train[SETTINGS])
+    stats = train[SENSORS].groupby(km.labels_).agg(["mean", "std"])
+
+    def apply(df: pd.DataFrame, regime: np.ndarray) -> pd.DataFrame:
+        mean = stats.xs("mean", axis=1, level=1).loc[regime].to_numpy()
+        std = stats.xs("std", axis=1, level=1).loc[regime].to_numpy()
+        z = np.divide(df[SENSORS].to_numpy() - mean, std, out=np.zeros(mean.shape), where=std > 0)
+        return df.assign(**dict(zip(SENSORS, z.T)))
+
+    return apply(train, km.labels_), apply(test, km.predict(test[SETTINGS]))
+
+
 def near_constant_columns(train: pd.DataFrame, std_threshold: float) -> list[str]:
     """Settings/sensors whose std is below threshold: no health signal (see notebooks/01_eda)."""
     std = train[SETTINGS + SENSORS].std()
